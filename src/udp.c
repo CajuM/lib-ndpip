@@ -96,18 +96,25 @@ void ndpip_udp_flush(struct ndpip_udp_socket *udp_sock)
 {
 	struct ndpip_socket *sock = &udp_sock->socket;
 
-	ndpip_ring_push(sock->recv_ring, sock->recv_tmp, sock->recv_tmp_len);
+	uint16_t sock_feed_tmp_len = sock->feed_tmp_len;
+	struct ndpip_pbuf **sock_feed_tmp = sock->feed_tmp;
 
-	udp_sock->socket.feed_tmp_len = 0;
-	udp_sock->socket.recv_tmp_len = 0;
+	for (uint16_t idx = 0; idx < sock_feed_tmp_len; idx++) {
+		struct ndpip_pbuf *pb = sock_feed_tmp[idx];
+		struct ndpip_pbuf_meta *pm = ndpip_pbuf_metadata(pb);
+
+		ndpip_udp_feed(udp_sock, &pm->remote, pb);
+	}
 
 	sock->rx_loop_seen = false;
+	udp_sock->socket.feed_tmp_len = 0;
 }
 
 void ndpip_udp_feed(struct ndpip_udp_socket *udp_sock, struct sockaddr_in *remote, struct ndpip_pbuf *pb)
 {
 	struct ndpip_socket *sock = &udp_sock->socket;
-	sock->recv_tmp[sock->recv_tmp_len++] = pb;
+
+	ndpip_ring_push_one_no_chk(sock->recv_ring, pb);
 }
 
 uint16_t ndpip_udp_max_xmit(struct ndpip_udp_socket *udp_sock, struct ndpip_pbuf **pb, uint16_t cnt)

@@ -244,11 +244,8 @@ static int ndpip_sock_bind(struct ndpip_socket *sock, const struct sockaddr *add
 	sock->local = *((struct sockaddr_in *) addr);
 	sock->iface = ndpip_iface_get_by_inaddr(sock->local.sin_addr);
 
-	sock->recv_tmp = malloc(sizeof(struct ndpip_pbuf *) * ndpip_iface_get_burst_size(sock->iface));
 	sock->feed_tmp = malloc(sizeof(struct ndpip_pbuf *) * ndpip_iface_get_burst_size(sock->iface));
-
 	sock->feed_tmp_len = 0;
-	sock->recv_tmp_len = 0;
 
 	if (sock->protocol == IPPROTO_TCP) {
 		struct ndpip_tcp_socket *tcp_sock = (struct ndpip_tcp_socket *) sock;
@@ -475,8 +472,13 @@ static int ndpip_sock_recv(struct ndpip_socket *sock, struct ndpip_pbuf **pb, ui
 
 static ssize_t ndpip_sock_can_send(struct ndpip_socket *sock)
 {
-	if (sock->protocol == IPPROTO_TCP)
-		return ndpip_tcp_can_send((struct ndpip_tcp_socket *) sock);
+	if (sock->protocol == IPPROTO_TCP) {
+		ndpip_mutex_lock(&sock->lock);
+		size_t r = ndpip_tcp_can_send((struct ndpip_tcp_socket *) sock);
+		ndpip_mutex_unlock(&sock->lock);
+
+		return r;
+	}
 
 	if (sock->protocol == IPPROTO_UDP)
 		return ndpip_udp_can_send((struct ndpip_udp_socket *) sock);
@@ -535,8 +537,13 @@ ret:
 
 static int ndpip_sock_write(struct ndpip_socket *sock, struct ndpip_pbuf **pb, uint16_t count)
 {
-	if (sock->protocol == IPPROTO_TCP)
-		return ndpip_tcp_write((struct ndpip_tcp_socket *) sock, pb, count);
+	if (sock->protocol == IPPROTO_TCP) {
+		ndpip_mutex_lock(&sock->lock);
+		int r = ndpip_tcp_write((struct ndpip_tcp_socket *) sock, pb, count);
+		ndpip_mutex_unlock(&sock->lock);
+
+		return r;
+	}
 
 	if (sock->protocol == IPPROTO_UDP)
 		return ndpip_udp_write((struct ndpip_udp_socket *) sock, pb, count);
@@ -688,8 +695,13 @@ int ndpip_send(int sockfd, struct ndpip_pbuf **pb, uint16_t count)
 
 static int ndpip_sock_send(struct ndpip_socket *sock, struct ndpip_pbuf **pb, uint16_t count)
 {
-	if (sock->protocol == IPPROTO_TCP)
-		return ndpip_tcp_send((struct ndpip_tcp_socket *) sock, pb, count);
+	if (sock->protocol == IPPROTO_TCP) {
+		ndpip_mutex_lock(&sock->lock);
+		int r = ndpip_tcp_send((struct ndpip_tcp_socket *) sock, pb, count);
+		ndpip_mutex_unlock(&sock->lock);
+
+		return r;
+	}
 
 	if (sock->protocol == IPPROTO_UDP)
 		return ndpip_udp_send((struct ndpip_udp_socket *) sock, pb, count);

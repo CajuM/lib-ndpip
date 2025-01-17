@@ -30,6 +30,12 @@ struct ndpip_ring *ndpip_ring_alloc(size_t length)
 	return ret;
 }
 
+void ndpip_ring_push_one_no_chk(struct ndpip_ring *ring, struct ndpip_pbuf *pb)
+{
+	ring->ring_base[ring->ring_end & ring->ring_mask] = pb;
+	ring->ring_end++;
+}
+
 int ndpip_ring_push_one(struct ndpip_ring *ring, struct ndpip_pbuf *pb)
 {
 	size_t ring_end = ring->ring_end;

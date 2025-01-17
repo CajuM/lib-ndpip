@@ -309,22 +309,13 @@ free_pkt:
 			struct ndpip_socket *sock = (struct ndpip_socket *) tcp_sock;
 
 			ndpip_mutex_lock(&sock->lock);
-			uint16_t sock_feed_tmp_len = sock->feed_tmp_len;
-			struct ndpip_pbuf **sock_feed_tmp = sock->feed_tmp;
-
-			for (uint16_t idx = 0; idx < sock_feed_tmp_len; idx++) {
-				struct ndpip_pbuf *pb = sock_feed_tmp[idx];
-				struct ndpip_pbuf_meta *pm = ndpip_pbuf_metadata(pb);
-
-				if (ndpip_tcp_feed(tcp_sock, &pm->remote, pb, pm->th, pm->th_hlen, pm->data_len) != 1)
-					freed_pkts[freed_pkt_cnt++] = pb;
-			}
-
-			int r = ndpip_tcp_flush(tcp_sock, replies[replies_len]);
+			int r = ndpip_tcp_flush(
+				tcp_sock,
+				replies[replies_len], &replies_len,
+				freed_pkts, &freed_pkt_cnt);
 			ndpip_mutex_unlock(&sock->lock);
 
 			if (r == 1) {
-				replies_len++;
 #ifdef NDPIP_GRANTS_ENABLE
 				sock->grants -= ndpip_pbuf_length(reply) + sock->grants_overhead;
 				/*
@@ -346,18 +337,6 @@ free_pkt:
 
 		for (uint16_t idx = 0; idx < udp_sockets_len; idx++) {
 			struct ndpip_udp_socket *udp_sock = udp_sockets[idx];
-			struct ndpip_socket *sock = (struct ndpip_socket *) udp_sock;
-
-			uint16_t sock_feed_tmp_len = sock->feed_tmp_len;
-			struct ndpip_pbuf **sock_feed_tmp = sock->feed_tmp;
-
-			for (uint16_t idx = 0; idx < sock_feed_tmp_len; idx++) {
-				struct ndpip_pbuf *pb = sock_feed_tmp[idx];
-				struct ndpip_pbuf_meta *pm = ndpip_pbuf_metadata(pb);
-
-				ndpip_udp_feed(udp_sock, &pm->remote, pb);
-			}
-
 			ndpip_udp_flush(udp_sock);
 		}
 

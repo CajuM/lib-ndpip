@@ -83,6 +83,7 @@ struct eqds_cn {
 struct ndpip_ring *ndpip_ring_alloc(size_t length);
 int ndpip_ring_push(struct ndpip_ring *ring, struct ndpip_pbuf **pbs, size_t count);
 int ndpip_ring_push_one(struct ndpip_ring *ring, struct ndpip_pbuf *pb);
+void ndpip_ring_push_one_no_chk(struct ndpip_ring *ring, struct ndpip_pbuf *pb);
 int ndpip_ring_pop(struct ndpip_ring *ring, size_t *count, struct ndpip_pbuf **pbs);
 int ndpip_ring_peek(struct ndpip_ring *ring, size_t *count, struct ndpip_pbuf **pbs);
 int ndpip_ring_flush(struct ndpip_ring *ring, size_t count);

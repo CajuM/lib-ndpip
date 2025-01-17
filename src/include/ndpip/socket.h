@@ -44,10 +44,7 @@ struct ndpip_socket {
 	struct ndpip_ring *xmit_ring;
 	struct ndpip_ring *recv_ring;
 
-	struct ndpip_pbuf **recv_tmp;
 	struct ndpip_pbuf **feed_tmp;
-
-	uint16_t recv_tmp_len;
 	uint16_t feed_tmp_len;
 
 	uint16_t tx_mss;
