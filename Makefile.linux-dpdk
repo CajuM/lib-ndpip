@@ -1,7 +1,8 @@
 CC ?= gcc
 AR ?= ar
 PKGCONF ?= pkg-config
-PREFIX ?=
+PREFIX ?= /usr
+DESTDIR ?=
 
 SRCS-y += src/tcp.c
 SRCS-y += src/udp.c
@@ -39,3 +40,9 @@ $(PC): $(PC).in
 
 clean:
 	rm -f $(OBJS-y) $(LIB)
+
+install: $(PC) $(LIB)
+	install -m0644 $(PC) $(DESTDIR)$(PREFIX)/lib/pkgconfig/$(PC)
+	install -m0644 $(LIB) $(DESTDIR)$(PREFIX)/lib/$(LIB)
+	mkdir -p $(DESTDIR)$(PREFIX)/include/ndpip
+	install -m0644 include/ndpip/* -t $(DESTDIR)$(PREFIX)/include/ndpip
