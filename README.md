@@ -14,7 +14,7 @@ To this end it does not implement the following features, normally found on a st
 * Fast Re-transmit
 * Re-order buffers
 
-According to my benchmarks, it's twice as fast as mTCP and even more scaleable.
+According to the benchmarks, it's twice as fast as mTCP and even more scaleable.
 The benchmarks can be found at: https://github.com/CajuM/eqds-cloudlab
 
 ## Features
